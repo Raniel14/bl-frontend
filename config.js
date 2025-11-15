@@ -1,17 +1,19 @@
-<!-- Set API URL from environment variables -->
-<script>
-  // Get API URL from environment or use a default
-  window.API_URL = window.API_URL || (
-    typeof process !== 'undefined' && process.env.API_URL ? process.env.API_URL :
-    (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '')
-  );
-  
-  // If running on Netlify, you can set the API_URL environment variable in Netlify dashboard
-  // or modify this to point to your backend URL
-  if (!window.API_URL && window.location.hostname !== 'localhost') {
-    // For production, set your backend URL here or use a Netlify environment variable
-    window.API_URL = '/api'; // Relative path if backend is on same domain
-    // OR set it to your backend URL:
-    // window.API_URL = 'https://your-backend-url.com';
+// config.js - runtime API URL configuration
+// This file sets `window.API_URL` for the frontend scripts. It must be plain JS
+// (no surrounding <script> tags) so it can be loaded with `<script src="config.js"></script>`.
+
+(function () {
+  // If another script already set API_URL, keep it
+  if (window.API_URL) return;
+
+  // Local development
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    window.API_URL = 'http://localhost:5000';
+  } else {
+    // Production: explicit Render backend URL to avoid CORS/origin mismatch
+    window.API_URL = 'https://backend-jkhn.onrender.com';
   }
-</script>
+
+  // Helpful debugging log when site loads
+  try { console.info('API_URL set to', window.API_URL); } catch (e) {}
+})();
