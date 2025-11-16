@@ -2,14 +2,16 @@ const API = (window.API_URL || 'http://localhost:5000') + '/api';
 
 async function fetchProducts(){
   try {
+    console.log('Fetching products from:', API);
     const res = await fetch(`${API}/products`);
-    if(!res.ok) throw new Error('Failed to fetch products');
+    if(!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch products`);
     const list = await res.json();
-    renderProducts(list);
+    console.log('Fetched products:', list);
+    renderProducts(list.value || list);
   } catch(e){ 
-    console.error(e);
+    console.error('Product fetch error:', e);
     const container = document.getElementById('products') || document.getElementById('productsGrid');
-    if(container) container.innerHTML = '<div class="alert error" style="grid-column:1/-1">⚠️ Unable to load products. Please try again later.</div>';
+    if(container) container.innerHTML = '<div class="alert error" style="grid-column:1/-1">⚠️ Unable to load products. Please try again later. Error: ' + e.message + '</div>';
   }
 }
 
@@ -17,20 +19,23 @@ function renderProducts(list){
   const container = document.getElementById('products') || document.getElementById('productsGrid');
   if(!container) return;
   
-  if(list.length === 0){
+  // Handle both array and object with .value property
+  const products = Array.isArray(list) ? list : (list.value || []);
+  
+  if(products.length === 0){
     container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#999">No products available yet</div>';
     return;
   }
   
   container.innerHTML = '';
-  list.forEach(p => {
+  products.forEach(p => {
     const div = document.createElement('div');
     div.style.cssText = 'background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;cursor:pointer;';
     div.className = 'card';
     // Product display: image, name, price
     let imageHtml = '';
     if (p.imageUrl) {
-      const imageSrc = p.imageUrl.startsWith('http') ? p.imageUrl : (window.location.origin + p.imageUrl);
+      const imageSrc = p.imageUrl.startsWith('http') ? p.imageUrl : (window.API_URL + p.imageUrl);
       imageHtml = `<img src="${imageSrc}" alt="${p.name}" style="width:100%;height:120px;object-fit:cover;display:block;margin-bottom:8px" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\'width:100%;height:120px;background:#e0e0e0;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;margin-bottom:8px\'>📷 No image</div>'"/>`;
     } else {
       imageHtml = '<div style="width:100%;height:120px;background:#e0e0e0;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;margin-bottom:8px">📷 No image</div>';
